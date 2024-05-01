@@ -2,11 +2,12 @@ import numpy as np
 import scipy as sci
 from scipy import linalg
 from sklearn.preprocessing import scale
-
+import torch
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-mpl.style.available
-mpl.style.use('seaborn-paper') 
+style = "seaborn-v0_8-paper"
+if  (style in mpl.style.available):
+    mpl.style.use(style) 
 import matplotlib.patches as mpatches
 
 
@@ -91,7 +92,11 @@ def error_summary(sensors, Xsmall, n_snapshots, model, Xmean, train_or_test='tra
         
         # ===================compute relative error train========================
         dataloader_temp = iter(DataLoader(sensors, batch_size = n_snapshots))
-        output_temp = model(Variable(dataloader_temp.next()).float().cuda())
+        if torch.cuda.is_available():
+            output_temp = model(Variable(next(dataloader_temp)).float().cuda())
+        else:
+            output_temp = model(Variable(next(dataloader_temp)).float().cpu())
+
         tt, _, mt = output_temp.shape
         
         redata = output_temp.cpu().data.numpy()
@@ -117,7 +122,10 @@ def final_summary(sensors, Xsmall, n_snapshots, model, Xmean, sensor_locations):
     from torch.utils.data import DataLoader, Dataset
     
     dataloader_temp = iter(DataLoader(sensors, batch_size = n_snapshots))
-    output_temp = model(Variable(dataloader_temp.next()).float().cuda())
+    if torch.cuda.is_available():
+        output_temp = model(Variable(next(dataloader_temp)).float().cuda())
+    else:
+        output_temp = model(Variable(next(dataloader_temp)).float().cpu())
     tt, _, mt = output_temp.shape
     #        
     redata = output_temp.cpu().data.numpy().reshape(tt, mt)
@@ -161,10 +169,10 @@ def summary_pod(Xsmall, Xsmall_test, sensors, sensors_test, Xmean, sensor_locati
 
     # Create linear regression object
     if alpha == 0:
-        reg = linear_model.LinearRegression(fit_intercept=False, normalize=False)
+        reg = linear_model.LinearRegression(fit_intercept=False)
     
     else:
-        reg = linear_model.Ridge(alpha=alpha, fit_intercept=False, normalize=False)
+        reg = linear_model.Ridge(alpha=alpha, fit_intercept=False)
 
     
     
@@ -206,10 +214,10 @@ def summary_pod(Xsmall, Xsmall_test, sensors, sensors_test, Xmean, sensor_locati
     
     # Create linear regression object
     if alpha == 0:
-        reg = linear_model.LinearRegression(fit_intercept=False, normalize=False)
+        reg = linear_model.LinearRegression(fit_intercept=False )
     
     else:
-        reg = linear_model.Ridge(alpha=alpha, fit_intercept=False, normalize=False)
+        reg = linear_model.Ridge(alpha=alpha, fit_intercept=False )
 
     # Train the model using the training sets
     reg.fit(P, sensors_temp)
@@ -239,7 +247,11 @@ def plot_spectrum(sensors, Xsmall, sensors_test, Xsmall_test,
     from torch.utils.data import DataLoader, Dataset
     
     dataloader_temp = iter(DataLoader(sensors, batch_size = n_snapshots))
-    output_temp = model(Variable(dataloader_temp.next()).float().cuda())
+    if torch.cuda.is_available():
+
+        output_temp = model(Variable(next(dataloader_temp)).float().cuda())
+    else:
+        output_temp = model(Variable(next(dataloader_temp)).float().cpu()) 
     tt, _, mt = output_temp.shape
     #        
     redata = output_temp.cpu().data.numpy().reshape(tt, mt)
@@ -288,7 +300,10 @@ def plot_spectrum(sensors, Xsmall, sensors_test, Xsmall_test,
 
 
     dataloader_temp = iter(DataLoader(sensors_test, batch_size = n_snapshots_test))
-    output_temp = model(Variable(dataloader_temp.next()).float().cuda())
+    if torch.cuda.is_available():
+        output_temp = model(Variable(next(dataloader_temp)).float().cuda())
+    else:
+        output_temp = model(Variable(next(dataloader_temp)).float().cpu())
     tt, _, mt = output_temp.shape
     #        
     redata = output_temp.cpu().data.numpy().reshape(tt, mt)
@@ -421,7 +436,7 @@ def plot_flow_cyliner_2(img_epoch, m, n, epoch, Xmean):
         
     #plt.title('Epoch number ' + str(epoch), fontsize = 16 )
     plt.axis('off')
-    plt.title('Reconstructed flow filed using the shallow decoder')          
+    plt.title('Reconstructed flow field using the shallow decoder')          
     plt.tight_layout()
     #plt.show()
     plt.savefig('results/reconstruction_via_shallow_decoder.png', dpi=300)          
@@ -460,7 +475,7 @@ def plot_flow_cyliner_pod(Xsmall, sensors, Xmean, sensor_locations, m, n):
         
     #plt.title('Epoch number ' + str(epoch), fontsize = 16 )
     plt.axis('off')
-    plt.title('Reconstructed flow filed using POD')      
+    plt.title('Reconstructed flow field using POD')      
     plt.tight_layout()
     #plt.show()
     plt.savefig('results/reconstruction_via_pod.png', dpi=300)          
@@ -483,7 +498,7 @@ def plot_flow_cyliner_regularized_pod(Xsmall, sensors, Xmean, sensor_locations, 
     
     # Linear reconstruction using PCA - Train
     n_sensors = len(sensor_locations)
-    reg = linear_model.Ridge(alpha=alpha, fit_intercept=False, normalize=False)
+    reg = linear_model.Ridge(alpha=alpha, fit_intercept=False)
     reg.fit(u[sensor_locations, 0:n_sensors], sensors.cpu().data.numpy().reshape(tt, n_sensors).T)
     redata_linear = (u[:,0:n_sensors].dot(reg.coef_.T)).T
 
@@ -500,7 +515,7 @@ def plot_flow_cyliner_regularized_pod(Xsmall, sensors, Xmean, sensor_locations, 
         
     #plt.title('Epoch number ' + str(epoch), fontsize = 16 )
     plt.axis('off')
-    plt.title('Reconstructed flow filed using POD Plus')          
+    plt.title('Reconstructed flow field using POD Plus')          
     plt.tight_layout()
     #plt.show()
     plt.savefig('results/reconstruction_via_pod_plus.png', dpi=300)          

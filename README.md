@@ -21,6 +21,20 @@ Start by cloning the git repository:
 git clone https://github.com/erichson/ShallowDecoder
 ```
 
+Then create a virtual environment with:
+```
+python -m venv shallow_decoder
+```
+
+Then activate the virtual environment with:
+```
+source shallow_decoder/bin/activate
+```
+
+Install the dependencies from the pyproject.toml with:
+```
+pip install .
+```
 Then, you can run a simple examples as follows (without plotting the results):
 
 ```

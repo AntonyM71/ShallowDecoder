@@ -5,8 +5,11 @@ import timeit
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-mpl.style.available
-mpl.style.use('seaborn-paper') 
+
+style = 'seaborn-v0_8-paper'
+
+if  (style in mpl.style.available):
+    mpl.style.use(style) 
 
 
 import torch
@@ -160,8 +163,10 @@ for runs in range(total_runs):
     # Deep Decoder
     #******************************************************************************
     model = model_from_name(model_name, outputlayer_size = outputlayer_size, n_sensors = n_sensors)
-    model = model.cuda()
-    
+    if torch.cuda.is_available():
+        model = model.cuda()
+    else: 
+        model = model.cpu()
     
     #******************************************************************************
     # Train: Initi model and set tuning parameters
@@ -199,7 +204,10 @@ for runs in range(total_runs):
     for epoch in range(num_epochs):
         
         for batch_idx, (data, target) in enumerate(train_loader):
-            data, target = data.cuda(), target.cuda()
+            if torch.cuda.is_available():            
+                data, target = data.cuda(), target.cuda()   
+            else :
+                data, target = data.cpu(), target.cpu()   
             data, target = Variable(data).float(), Variable(target).float()
     
             
@@ -222,7 +230,7 @@ for runs in range(total_runs):
             
     
         if epoch % 500 == 0:
-            print('********** Epoche %s **********' %( epoch))
+            print('********** Epoch %s **********' %( epoch))
             rerror_train.append(error_summary(sensors, Xsmall, n_snapshots_train, model.eval(), Xmean, 'training'))
             rerror_test.append(error_summary(sensors_test, Xsmall_test, n_snapshots_test, model.eval(), Xmean, 'testing'))
     
@@ -234,8 +242,10 @@ for runs in range(total_runs):
     if plotting == True:    
         model.eval()
         dataloader_temp = iter(DataLoader(sensors, batch_size = n_snapshots_train))
-        output_temp = model(Variable(dataloader_temp.next()).float().cuda())
-    
+        if torch.cuda.is_available():        
+            output_temp = model(Variable(next(dataloader_temp)).float().cuda())
+        else:
+            output_temp = model(Variable(next(dataloader_temp)).float().cpu())
         if dataset == 'flow_cylinder':
             plot_flow_cyliner_2(output_temp.cpu().data.numpy()[0,:,:].reshape(m,n), m, n, epoch, Xmean)
 

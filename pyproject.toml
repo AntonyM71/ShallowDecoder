@@ -1,0 +1,14 @@
+
+[project]
+name = "shallow-decoder"
+description = "Shallow Decoder for flow reconstruction with limited sensors and limited data"
+version = "0.1.0"
+dependencies = [
+    "torch",
+    "scikit-learn","cmocean", "matplotlib"
+]
+[build-system]
+# Minimum requirements for the build system to execute.
+requires = ["setuptools", "wheel"]      # PEP 508 specifications.
+[tool.setuptools]
+py-modules = []
